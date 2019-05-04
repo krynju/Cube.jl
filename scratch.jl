@@ -1,22 +1,20 @@
 using Pkg
-
 Pkg.activate(".")
 
 using Revise, Cube
 
-Cube.simple_ccall()
+# ccall tests
+Cube.ccall_simple()
+Cube.ccall_array_arg_test()
 
-Cube.run_cube_benchmark_assembly()
+Cube.run_julia_benchmark()
+Cube.run_assembly_benchmark()
+
+Cube.run_assembly()
+using Plots
+heatmap(a)
 
 using BenchmarkTools
 let
-    @benchmark Cube.f()
+    @benchmark Cube.ccall_array_arg_test()
 end # let
-
-Cube.run_cube_benchmark_assembly()
-
-Cube.run_cube_benchmark()
-
-using Plots
-heatmap(transpose(a))
-# Cube.array_arg_test()

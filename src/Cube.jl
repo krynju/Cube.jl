@@ -34,7 +34,7 @@ struct DrawnObject_C
     vertices::NTuple{8, Point_C}
     position_vector::NTuple{3, Float32}
     rotation_vector::NTuple{3, Float32}
-    connections::NTuple{24, Int32}
+    connections::NTuple{12, Connection_C}
 end
 
 function prepare_args()
@@ -57,12 +57,12 @@ function prepare_args()
     c = [Connection(x[1], x[2]) for x in connections]
 
     cube = DrawnObject(v, p_v, r_v, c)
-    output = zeros(UInt8, 512, 512*3)
+    output = zeros(UInt8, 512*3, 512)
 
     return (cube, output)
 end
 
-function prepare_args_C()
+function prepare_args_assembly()
     CUBE_HALF_SIDE =75.0
 
     vertices = [[-CUBE_HALF_SIDE, CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
@@ -74,25 +74,25 @@ function prepare_args_C()
             [-CUBE_HALF_SIDE, CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
             [CUBE_HALF_SIDE, CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1]]
 
-    connections = [0, 3, 0, 5, 0, 6, 1, 3, 1, 4, 1, 6, 2, 3, 2, 4, 2, 5, 4, 7, 5, 7, 6, 7]
+    connections = [(0, 3), (0, 5), (0, 6), (1, 3), (1, 4), (1, 6), (2, 3), (2, 4), (2, 5), (4, 7), (5, 7), (6, 7)]
 
     v = ([Point_C((vertice...,)) for vertice in vertices]...,)
-    p_v = ([0.0, 0.0, -200.0]...,)
-    r_v = ([0.0, 0.5, 0.0]...,)
-    c = (connections...,)
+    p_v = ([rand()*10.0, rand()*10.0, -200.0]...,)
+    r_v = ([rand()*pi*1.0, rand()*pi*1.0, rand()*pi*1.0]...,)
+    c = ([Connection_C(x[1], x[2]) for x in connections]...,)
 
     cube = DrawnObject_C(v, p_v, r_v, c)
-    output = zeros(UInt8, 512, 512*3)
+    output = zeros(UInt8, 512*3, 512)
 
     return (cube, output)
 end
 
-function run_cube_benchmark()
+function run_julia_benchmark()
     cube, output = prepare_args()
     @benchmark render!($output, $cube)
 end
 
-function run_cube()
+function run_julia()
     cube, output = prepare_args()
     render!(output, cube)
 end
@@ -142,7 +142,7 @@ function render!(output::Array{UInt8, 2}, cube::DrawnObject)
 
     # line drawing
 
-    @inbounds for c in cube.connections
+    for c in cube.connections
         from = cords[c.from + 1]
         to = cords[c.to + 1]
 
@@ -168,9 +168,9 @@ function render!(output::Array{UInt8, 2}, cube::DrawnObject)
             xcord = trunc(Int32, x) * 3
             ycord = trunc(Int32, y)
 
-            output[ycord, xcord] = 0xFF
-            output[ycord, xcord + 1] = 0xFF
-            output[ycord, xcord + 2] = 0xFF
+            output[xcord+1, ycord] = 0xFF
+            output[xcord+1, ycord] = 0xFF
+            output[xcord+1, ycord] = 0xFF
 
             x += dx
             y += dy
@@ -178,12 +178,9 @@ function render!(output::Array{UInt8, 2}, cube::DrawnObject)
         end
     end
     output
-
 end
 
-greet() = print("Hello World!")
-
-function simple_ccall()
+function ccall_simple()
     ccall((:simple_fun, "src/simple.lib"), Int32, (Int32,), 10)
 
     val = 10
@@ -191,26 +188,32 @@ function simple_ccall()
     ccall((:simple_fun_pointer, "src/simple.lib"), Cvoid, (Ref{Int32},), val_ref)
     val_ref[]
 
-    cube, output = prepare_args_C()
+    cube, output = prepare_args_assembly()
     output2 = Array{UInt8,1}(undef, 786486)
 
-    @benchmark ccall((:simple_fun_args, "src/simple.lib"), Float32,(Ref{DrawnObject_C}, Ref{UInt8}), $cube, $output2)
+    ccall((:simple_fun_args, "src/simple.lib"), Float32,(Ref{DrawnObject_C}, Ref{UInt8}), cube, output2)
 end
 
-function array_arg_test()
+function ccall_array_arg_test()
     input = Array{Int32,1}([3, 5, 88])
     ccall((:array_arg, "src/simple.lib"), Int32, (Ref{Int32},), input)
-    input
 end
 
-function run_cube_benchmark_assembly()
-    cube, output = prepare_args_C()
-
-    render_ccall(cube, output)
+function run_assembly()
+    cube, output = prepare_args_assembly()
+    ccall_assembly_render(cube, output)
+    output
 end
 
-function render_ccall(cube::DrawnObject_C, output::Array{UInt8, 2})
-    @benchmark ccall((:render, "src/render.lib"), Cvoid, (Ref{DrawnObject_C}, Ref{UInt8}), $cube, $output)
+function run_assembly_benchmark()
+    # cube, output = prepare_args_assembly()
+    b = @benchmarkable ccall_assembly_render($(prepare_args_assembly()[1]), $(prepare_args_assembly()[2]))
+    run(b)
+end
+
+function ccall_assembly_render(cube::DrawnObject_C, output::Array{UInt8, 2})
+    ccall((:render, "src/render.lib"), Cvoid, (Ref{DrawnObject_C}, Ref{UInt8}), cube, output)
+    output
 end
 
 end # module
