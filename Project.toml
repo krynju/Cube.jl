@@ -1,7 +1,7 @@
 name = "Cube"
 uuid = "6bfa9f00-6914-11e9-1f14-2988fa8a2dd2"
 authors = ["Krystian Gulinski <gulinski.krystian@gmail.com>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"

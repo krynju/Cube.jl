@@ -21,6 +21,22 @@ struct DrawnObject
     connections::Vector{Connection}
 end
 
+struct Point_C
+    position_vector::NTuple{4, Float32}
+end
+
+struct Connection_C
+    from::Int32
+    to::Int32
+end
+
+struct DrawnObject_C
+    vertices::NTuple{8, Point_C}
+    position_vector::NTuple{3, Float32}
+    rotation_vector::NTuple{3, Float32}
+    connections::NTuple{24, Int32}
+end
+
 function prepare_args()
     CUBE_HALF_SIDE = 100.0
 
@@ -41,6 +57,31 @@ function prepare_args()
     c = [Connection(x[1], x[2]) for x in connections]
 
     cube = DrawnObject(v, p_v, r_v, c)
+    output = zeros(UInt8, 512, 512*3)
+
+    return (cube, output)
+end
+
+function prepare_args_C()
+    CUBE_HALF_SIDE =75.0
+
+    vertices = [[-CUBE_HALF_SIDE, CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
+            [-CUBE_HALF_SIDE, -CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
+            [CUBE_HALF_SIDE, -CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
+            [-CUBE_HALF_SIDE, -CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
+            [CUBE_HALF_SIDE, -CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
+            [CUBE_HALF_SIDE, CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
+            [-CUBE_HALF_SIDE, CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
+            [CUBE_HALF_SIDE, CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1]]
+
+    connections = [0, 3, 0, 5, 0, 6, 1, 3, 1, 4, 1, 6, 2, 3, 2, 4, 2, 5, 4, 7, 5, 7, 6, 7]
+
+    v = ([Point_C((vertice...,)) for vertice in vertices]...,)
+    p_v = ([0.0, 0.0, -200.0]...,)
+    r_v = ([0.0, 0.5, 0.0]...,)
+    c = (connections...,)
+
+    cube = DrawnObject_C(v, p_v, r_v, c)
     output = zeros(UInt8, 512, 512*3)
 
     return (cube, output)
@@ -142,5 +183,34 @@ end
 
 greet() = print("Hello World!")
 
+function simple_ccall()
+    ccall((:simple_fun, "src/simple.lib"), Int32, (Int32,), 10)
+
+    val = 10
+    val_ref = Ref{Int32}(val)
+    ccall((:simple_fun_pointer, "src/simple.lib"), Cvoid, (Ref{Int32},), val_ref)
+    val_ref[]
+
+    cube, output = prepare_args_C()
+    output2 = Array{UInt8,1}(undef, 786486)
+
+    @benchmark ccall((:simple_fun_args, "src/simple.lib"), Float32,(Ref{DrawnObject_C}, Ref{UInt8}), $cube, $output2)
+end
+
+function array_arg_test()
+    input = Array{Int32,1}([3, 5, 88])
+    ccall((:array_arg, "src/simple.lib"), Int32, (Ref{Int32},), input)
+    input
+end
+
+function run_cube_benchmark_assembly()
+    cube, output = prepare_args_C()
+
+    render_ccall(cube, output)
+end
+
+function render_ccall(cube::DrawnObject_C, output::Array{UInt8, 2})
+    @benchmark ccall((:render, "src/render.lib"), Cvoid, (Ref{DrawnObject_C}, Ref{UInt8}), $cube, $output)
+end
 
 end # module
