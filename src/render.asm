@@ -1,3 +1,7 @@
+;nasm -f win64 .\render.asm -g -O0
+;gcc render.obj -shared -fPIC -flinker-output=dyn -static -o render.lib -g -O0
+
+
 section .data
 matrix:             dd  1.0, 0, 0, 0,       \
                         0, 1.0, 0, 0,       \
@@ -208,13 +212,13 @@ draw_lines:
 
     mov eax, DWORD[r8+r14]              ; load index of source vertex
     mov ebx, DWORD[r8+r14+4]            ; load index of destination vertex
-	
+
 	.outer_loop20:
     movss xmm0, [projected_points+8*rax]        ; load source vertex projected x cord
     movss xmm1, [projected_points+8*rax+4]      ; load source vertex projected y cord
     movss xmm2, [projected_points+8*rbx]        ; load destination vertex projected x cord
     movss xmm3, [projected_points+8*rbx+4]      ; load destination vertex projected y cord
-	
+
 	.outer_loop3:
     subss xmm2, xmm0                ; dx = x_d - x_s
     subss xmm3, xmm1                ; dy = y_d - y_1
@@ -237,7 +241,7 @@ draw_lines:
     divss xmm3, xmm4                ; y_inc = dy/step
 
     xorps xmm5, xmm5                ; zero       xmm5
-    
+
 
 	.inner_loop:
     cvtss2si eax, xmm0          ; convert x float to int32
@@ -265,7 +269,7 @@ draw_lines:
     comiss xmm5, xmm4           ; check if less than step
     jb .inner_loop
 
-	
+
     cmp r14,0                   ; check if all connections were drawn
     jne .outer_loop
 

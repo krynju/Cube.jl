@@ -1,3 +1,6 @@
+// gcc simple.c -shared -fPIC -flinker-output=dyn -static -o simple.lib
+
+
 extern int render(void *adr, unsigned char *output);
 
 struct Point {
@@ -28,7 +31,7 @@ void simple_fun_pointer(int *val_pointer){
 }
 
 float simple_fun_args(struct Cube *str_ptr, unsigned char *output){
-	
+
 	return str_ptr->vertices[0].position_vector[0];
 }
 
