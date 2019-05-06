@@ -134,8 +134,8 @@ function run_julia_benchmark()
 end
 
 function run_julia_optimised_benchmark()
-    # cube, output = prepare_args_julia_optimised()
-    @benchmark render_optimised!(output, cube) setup(cube, output = prepare_args_julia_optimised())
+    cube, output = prepare_args_julia_optimised()
+    @benchmark render_optimised!($output, $cube)
 end
 
 function run_julia()
