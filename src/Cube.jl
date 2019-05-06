@@ -232,23 +232,29 @@ end
 function render_optimised!(output::Array{UInt8, 2}, cube::DrawnObject_optimised)
     # construct rotation matrix
 
-    Rz = Matrix{Float32}(I, 4, 4)
+    Rz = @MMatrix zeros(Float32, 4, 4)
     Rz[1, 1] = cos(cube.rotation_vector[3])
     Rz[1, 2] = sin(cube.rotation_vector[3])
     Rz[2, 1] = -sin(cube.rotation_vector[3])
     Rz[2, 2] = cos(cube.rotation_vector[3])
+    Rz[3, 3] = 1.0
+    Rz[4, 4] = 1.0
 
-    Ry = Matrix{Float32}(I, 4, 4)
+    Ry = @MMatrix zeros(Float32, 4, 4)
     Ry[1, 1] = cos(cube.rotation_vector[2])
     Ry[3, 1] = sin(cube.rotation_vector[2])
     Ry[1, 3] = -sin(cube.rotation_vector[2])
     Ry[3, 3] = cos(cube.rotation_vector[2])
+    Rz[2, 2] = 1.0
+    Rz[4, 4] = 1.0
 
-    Rx = Matrix{Float32}(I, 4, 4)
+    Rx = @MMatrix zeros(Float32, 4, 4)
     Rx[2, 2] = cos(cube.rotation_vector[1])
     Rx[2, 3] = sin(cube.rotation_vector[1])
     Rx[3, 2] = -sin(cube.rotation_vector[1])
     Rx[3, 3] = cos(cube.rotation_vector[1])
+    Rz[1, 1] = 1.0
+    Rz[4, 4] = 1.0
 
     R = Rz * Ry * Rx
 
@@ -265,20 +271,18 @@ function render_optimised!(output::Array{UInt8, 2}, cube::DrawnObject_optimised)
     distance = -100
     half_size = 256
 
-    cords = @MMatrix zeros(Float32, 2, 8)
 
     @inbounds for i = 1:8
-        x = vertices[:,i]
-        cords[:,i] .= (x[1:2] .* (distance / x[3]) .+ half_size )
+        vertices[:,i] = vertices[:,i] .* (distance / vertices[3,i]) .+ half_size
     end
 
 
 
-    # line drawing
+    #line drawing
 
     @inbounds for c in cube.connections
-        from = cords[:, c.from + 1]
-        to = cords[:, c.to + 1]
+        from = vertices[:, c.from + 1]
+        to = vertices[:, c.to + 1]
 
         x1 = from[1];   y1 = from[2];
         x2 = to[1];     y2 = to[2]
