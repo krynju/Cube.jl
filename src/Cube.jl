@@ -4,39 +4,11 @@ using LinearAlgebra
 using BenchmarkTools
 using StaticArrays
 
+include("types.jl")
+
 export run_julia, run_julia_benchmark, run_assembly, run_assembly_benchmark
 
-struct Point_assembly
-    position_vector::NTuple{4, Float32}
-end
 
-struct Connection_assembly
-    from::Int32
-    to::Int32
-end
-
-struct Cube_assembly
-    vertices::NTuple{8, Point_assembly}
-    position_vector::NTuple{3, Float32}
-    rotation_vector::NTuple{3, Float32}
-    connections::NTuple{12, Connection_assembly}
-end
-
-struct Point_julia
-    position_vector::SVector{4, Float32}
-end
-
-struct Connection_julia
-    from::Int32
-    to::Int32
-end
-
-struct Cube_julia
-    vertices::SVector{8, Point_julia}
-    position_vector::SVector{3, Float32}
-    rotation_vector::SVector{3, Float32}
-    connections::SVector{12, Connection_julia}
-end
 
 function prepare_args_assembly()
     CUBE_HALF_SIDE =75.0
@@ -61,6 +33,32 @@ function prepare_args_assembly()
     output = zeros(UInt8, 512*3, 512)
 
     return (cube, output)
+end
+
+function prepare_args_lazy()
+    CUBE_HALF_SIDE = 100.0
+
+    vertices = [[-CUBE_HALF_SIDE, CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
+            [-CUBE_HALF_SIDE, -CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
+            [CUBE_HALF_SIDE, -CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
+            [-CUBE_HALF_SIDE, -CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
+            [CUBE_HALF_SIDE, -CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
+            [CUBE_HALF_SIDE, CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
+            [-CUBE_HALF_SIDE, CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
+            [CUBE_HALF_SIDE, CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1]]
+
+    connections = [(0, 3), (0, 5), (0, 6), (1, 3), (1, 4), (1, 6), (2, 3), (2, 4), (2, 5), (4, 7), (5, 7), (6, 7)]
+
+    v = [Point(vertice) for vertice in vertices]
+    p_v = [0.0, 0.0, -200.0]
+    r_v = [0.0, 0.0, 30.0]
+    c = [Connection(x[1], x[2]) for x in connections]
+
+    cube = DrawnObject(v, p_v, r_v, c)
+    output = zeros(UInt8, 512*3, 512)
+
+    return (cube, output)
+    connections::SVector{12, Connection_julia}
 end
 
 function prepare_args_julia()
