@@ -245,16 +245,16 @@ function render_optimised!(output::Array{UInt8, 2}, cube::DrawnObject_optimised)
     Ry[3, 1] = sin(cube.rotation_vector[2])
     Ry[1, 3] = -sin(cube.rotation_vector[2])
     Ry[3, 3] = cos(cube.rotation_vector[2])
-    Rz[2, 2] = 1.0
-    Rz[4, 4] = 1.0
+    Ry[2, 2] = 1.0
+    Ry[4, 4] = 1.0
 
     Rx = @MMatrix zeros(Float32, 4, 4)
     Rx[2, 2] = cos(cube.rotation_vector[1])
     Rx[2, 3] = sin(cube.rotation_vector[1])
     Rx[3, 2] = -sin(cube.rotation_vector[1])
     Rx[3, 3] = cos(cube.rotation_vector[1])
-    Rz[1, 1] = 1.0
-    Rz[4, 4] = 1.0
+    Rx[1, 1] = 1.0
+    Rx[4, 4] = 1.0
 
     R = Rz * Ry * Rx
 
