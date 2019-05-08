@@ -3,6 +3,8 @@ activate(".")
 
 using Revise, Cube
 
+Cube.prepare_args_julia_rasterize()
+
 Cube.run_julia_benchmark()
 Cube.run_assembly_benchmark()
 
