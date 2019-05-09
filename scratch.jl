@@ -16,3 +16,6 @@ Cube.run_julia()
 using Plots
 heatmap(Cube.run_julia_rasterize())
 heatmap(Cube.run_assembly())
+
+using Colors, ImageView
+reinterpret(ARGB32, Cube.run_julia_rasterize())

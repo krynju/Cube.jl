@@ -11,7 +11,7 @@ function run_julia_rasterize_benchmark()
 end
 
 function prepare_args_julia_rasterize()
-    CUBE_HALF_SIDE =75.0
+    CUBE_HALF_SIDE = 75.0
 
     vertices = [[-CUBE_HALF_SIDE, CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
             [-CUBE_HALF_SIDE, -CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
@@ -28,14 +28,21 @@ function prepare_args_julia_rasterize()
     p_v = [rand()*10.0, rand()*10.0, -200.0]
     r_v = [rand()*pi*1.0, rand()*pi*1.0, rand()*pi*1.0]
     c = [Connection_julia_rasterize(x[1], x[2]) for x in connections]
-    walls = [SVector{4, Int32}(3,5,8,6)]
+    walls = (
+        SVector{4, Int32}(3,5,8,6),
+        SVector{4, Int32}(5,2,7,8),
+        SVector{4, Int32}(2,4,1,7),
+        SVector{4, Int32}(4,3,6,1),
+        SVector{4, Int32}(8,7,1,6),
+        SVector{4, Int32}(2,5,3,4),
+        )
     cube = Cube_julia_rasterize(v, p_v, r_v, c, walls)
-    output = zeros(UInt8, 512*3, 512)
+    output = zeros(UInt32, 512, 512)
 
     return (cube, output)
 end
 
-function render_rasterize!(output::Array{UInt8, 2}, cube::Cube_julia_rasterize)
+function render_rasterize!(output::Array{UInt32, 2}, cube::Cube_julia_rasterize)
     # construct rotation matrix
 
     Rz = @MMatrix zeros(Float32, 4, 4)
@@ -102,9 +109,9 @@ function render_rasterize!(output::Array{UInt8, 2}, cube::Cube_julia_rasterize)
         x = x1; y = y1; i = 1.0
 
         while i <= step
-            xcord = trunc(Int32, x) * 3
+            xcord = trunc(Int32, x)
             ycord = trunc(Int32, y)
-            output[xcord:xcord+2, ycord] .= 0xFF
+            output[xcord, ycord] = 0xFFFFFFFF
             x += dx;    y += dy;    i += 1.0
         end
     end
@@ -112,37 +119,45 @@ function render_rasterize!(output::Array{UInt8, 2}, cube::Cube_julia_rasterize)
 end # function
 
 
-function rasterize!(output::Array{UInt8, 2}, cube::Cube_julia_rasterize, vertices::MMatrix{4, 8, Float32})
-    c = cube.walls[1]
-    p1 = 0.0f0
-    p2 = 0.0f0
-    tv11 = vertices[1, c[1]]
-    tv21 = vertices[2, c[1]]
-    tv12 = vertices[1, c[2]]
-    tv22 = vertices[2, c[2]]
-    tv13 = vertices[1, c[3]]
-    tv23 = vertices[2, c[3]]
-    tv14 = vertices[1, c[4]]
-    tv24 = vertices[2, c[4]]
+function rasterize!(output::Array{UInt32, 2}, cube::Cube_julia_rasterize, vertices::MMatrix{4, 8, Float32})
+    cube_number = 0
+    colors = [0xFFe6194B; 0xFFf58231; 0xFFffe119;0xFFbfef45;0xff3cb44b;0xff42d4f4]
 
-    for i in 1:3:size(output)[1]
-        p1 += 1.0f0
+    for c in cube.walls
+        cube_number += 1
+        p1 = 0.0f0
         p2 = 0.0f0
-        for j in 1:size(output)[2]
-            p2 += 1.0f0
 
-            e = true
+        tv11 = vertices[1, c[1]]
+        tv21 = vertices[2, c[1]]
+        tv12 = vertices[1, c[2]]
+        tv22 = vertices[2, c[2]]
+        tv13 = vertices[1, c[3]]
+        tv23 = vertices[2, c[3]]
+        tv14 = vertices[1, c[4]]
+        tv24 = vertices[2, c[4]]
 
-            e &= edge_fun(p1, p2, tv11, tv21, tv12, tv22)
-            e &= edge_fun(p1, p2, tv12, tv22, tv13, tv23)
-            e &= edge_fun(p1, p2, tv13, tv23, tv14, tv24)
-            e &= edge_fun(p1, p2, tv14, tv24, tv11, tv21)
 
-            if e
-                output[i:i+2, j] .= 0xFF
+        for i in 1:size(output)[1]
+            p1 += 1.0f0
+            p2 = 0.0f0
+            for j in 1:size(output)[2]
+                p2 += 1.0f0
+
+                e = true
+
+                e &= edge_fun(p1, p2, tv11, tv21, tv12, tv22)
+                e &= edge_fun(p1, p2, tv12, tv22, tv13, tv23)
+                e &= edge_fun(p1, p2, tv13, tv23, tv14, tv24)
+                e &= edge_fun(p1, p2, tv14, tv24, tv11, tv21)
+
+                if e
+                    output[i, j] = colors[cube_number]
+                end
             end
         end
-    end
+    end # for
+
 end
 
 @inline function edge_fun(p1::Float32, p2::Float32, u1::Float32, u2::Float32, v1::Float32, v2::Float32)

@@ -51,5 +51,5 @@ struct Cube_julia_rasterize
     position_vector::SVector{3, Float32}
     rotation_vector::SVector{3, Float32}
     connections::SVector{12, Connection_julia_rasterize}
-    walls::SVector{1, SVector{4, Int32}}
+    walls::SVector{6, SVector{4, Int32}}
 end
