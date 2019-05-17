@@ -85,7 +85,7 @@ function render_rasterize!(output::Array{UInt32, 2}, cube::Cube_julia_rasterize)
     half_size = 256
 
     @inbounds for i = 1:8
-        vertices[:,i] .= vertices[:,i] .* (distance / vertices[3,i]) .+ half_size
+        vertices[:,i] = vertices[:,i] .* (distance / vertices[3,i]) .+ half_size
     end
 
     rasterize!(output, cube, vertices)
@@ -121,9 +121,9 @@ end # function
 
 function rasterize!(output::Array{UInt32, 2}, cube::Cube_julia_rasterize, vertices::MMatrix{4, 8, Float32})
     cube_number = 0
-    colors = [0xFFe6194B; 0xFFf58231; 0xFFffe119;0xFFbfef45;0xff3cb44b;0xff42d4f4]
+    colors = [0xFFe6194B 0xFFf58231 0xFFffe119 0xFFbfef45 0xff3cb44b 0xff42d4f4]
 
-    for c in cube.walls
+    @inbounds for c in cube.walls
         cube_number += 1
         p1 = 0.0f0
         p2 = 0.0f0
@@ -138,13 +138,17 @@ function rasterize!(output::Array{UInt32, 2}, cube::Cube_julia_rasterize, vertic
         tv24 = vertices[2, c[4]]
 
 
-        for i in 1:size(output)[1]
-            p1 += 1.0f0
-            p2 = 0.0f0
-            for j in 1:size(output)[2]
-                p2 += 1.0f0
+        @inbounds for i in 1:size(output)[1]
+            # p1 += 1.0f0
+            # p2 = 0.0f0
+            p1 = convert(Float32, i)
+
+            @inbounds for j in 1:size(output)[2]
+                # p2 += 1.0f0
 
                 e = true
+
+                p2 = convert(Float32, j)
 
                 e &= edge_fun(p1, p2, tv11, tv21, tv12, tv22)
                 e &= edge_fun(p1, p2, tv12, tv22, tv13, tv23)

@@ -34,23 +34,23 @@ function run_assembly_benchmark()
 end
 
 function ccall_assembly(cube::Cube_assembly, output::Array{UInt8, 2})
-    ccall((:render, "src/render.lib"), Cvoid, (Ref{Cube_assembly}, Ref{UInt8}), cube, output)
+    ccall((:render, "src/assembly_files/render.lib"), Cvoid, (Ref{Cube_assembly}, Ref{UInt8}), cube, output)
     output
 end
 
 function ccall_simple()
-    ccall((:simple_fun, "src/simple.lib"), Int32, (Int32,), 10)
+    ccall((:simple_fun, "src/assembly_files/simple.lib"), Int32, (Int32,), 10)
 
     val = 10
     val_ref = Ref{Int32}(val)
-    ccall((:simple_fun_pointer, "src/simple.lib"), Cvoid, (Ref{Int32},), val_ref)
+    ccall((:simple_fun_pointer, "src/assembly_files/simple.lib"), Cvoid, (Ref{Int32},), val_ref)
     val_ref[]
 
     cube, output = prepare_args_assembly()
     output2 = Array{UInt8,1}(undef, 786486)
 
-    ccall((:simple_fun_args, "src/simple.lib"), Float32,(Ref{Cube_assembly}, Ref{UInt8}), cube, output2)
+    ccall((:simple_fun_args, "src/assembly_files/simple.lib"), Float32,(Ref{Cube_assembly}, Ref{UInt8}), cube, output2)
 
     input = Array{Int32,1}([3, 5, 88])
-    ccall((:array_arg, "src/simple.lib"), Int32, (Ref{Int32},), input)
+    ccall((:array_arg, "src/assembly_files/simple.lib"), Int32, (Ref{Int32},), input)
 end
