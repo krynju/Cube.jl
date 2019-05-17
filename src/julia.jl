@@ -1,48 +1,8 @@
 function run_julia()
-    cube, output = prepare_args_julia()
+    cube = generate_cube_julia()
+    output = generate_output_uint8()
     render!(output, cube)
 end
-
-
-function run_julia_benchmark()
-    # cube, output = prepare_args_julia()
-    @benchmark render!($(prepare_args_julia()[2]), $(prepare_args_julia()[1]))
-end
-
-
-function prepare_args_julia()
-    CUBE_HALF_SIDE =75.0
-
-    vertices = [[-CUBE_HALF_SIDE, CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
-            [-CUBE_HALF_SIDE, -CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
-            [CUBE_HALF_SIDE, -CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
-            [-CUBE_HALF_SIDE, -CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
-            [CUBE_HALF_SIDE, -CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
-            [CUBE_HALF_SIDE, CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
-            [-CUBE_HALF_SIDE, CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
-            [CUBE_HALF_SIDE, CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1]]
-
-    connections = [(0, 3), (0, 5), (0, 6), (1, 3), (1, 4), (1, 6), (2, 3), (2, 4), (2, 5), (4, 7), (5, 7), (6, 7)]
-
-    v = [SVector{4, Float32}(vertice) for vertice in vertices]
-    p_v = [rand()*10.0, rand()*10.0, -200.0]
-    r_v = [rand()*pi*1.0, rand()*pi*1.0, rand()*pi*1.0]
-    c = [SVector{2, Int32}(x[1], x[2]) for x in connections]
-    walls = (
-        SVector{4, Int32}(3,5,8,6),
-        SVector{4, Int32}(5,2,7,8),
-        SVector{4, Int32}(2,4,1,7),
-        SVector{4, Int32}(4,3,6,1),
-        SVector{4, Int32}(8,7,1,6),
-        SVector{4, Int32}(2,5,3,4),
-        )
-
-    cube = CubeJulia(v, p_v, r_v, c,walls)
-    output = zeros(UInt8, 512*3, 512)
-
-    return (cube, output)
-end
-
 
 function render!(output::Array{UInt8, 2}, cube::CubeJulia)
     # construct rotation matrix
@@ -92,11 +52,8 @@ function render!(output::Array{UInt8, 2}, cube::CubeJulia)
 
     #line drawing
     @inbounds for c in cube.connections
-        from = vertices[:, c[1] + 1]
-        to = vertices[:, c[2] + 1]
-
-        x1 = from[1];   y1 = from[2];
-        x2 = to[1];     y2 = to[2]
+        x1 = vertices[1, c[1]];   y1 = vertices[2, c[1]];
+        x2 = vertices[1, c[2]];   y2 = vertices[2, c[2]];
 
         dx = x2 - x1
         dy = y2 - y1

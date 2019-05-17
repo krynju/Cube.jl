@@ -1,46 +1,7 @@
-
 function run_julia_rasterize()
-    cube, output = prepare_args_julia_rasterize()
+    cube = generate_cube_julia()
+    output = generate_output_uint32()
     render_rasterize!(output, cube)
-end
-
-
-function run_julia_rasterize_benchmark()
-    # cube, output = prepare_args_julia()
-    @benchmark render_rasterize!($(prepare_args_julia_rasterize()[2]), $(prepare_args_julia_rasterize()[1]))
-end
-
-function prepare_args_julia_rasterize()
-    CUBE_HALF_SIDE =75.0
-
-    vertices = [[-CUBE_HALF_SIDE, CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
-            [-CUBE_HALF_SIDE, -CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
-            [CUBE_HALF_SIDE, -CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
-            [-CUBE_HALF_SIDE, -CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
-            [CUBE_HALF_SIDE, -CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
-            [CUBE_HALF_SIDE, CUBE_HALF_SIDE, CUBE_HALF_SIDE, 1],
-            [-CUBE_HALF_SIDE, CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1],
-            [CUBE_HALF_SIDE, CUBE_HALF_SIDE, -CUBE_HALF_SIDE, 1]]
-
-    connections = [(0, 3), (0, 5), (0, 6), (1, 3), (1, 4), (1, 6), (2, 3), (2, 4), (2, 5), (4, 7), (5, 7), (6, 7)]
-
-    v = [SVector{4, Float32}(vertice) for vertice in vertices]
-    p_v = [rand()*10.0, rand()*10.0, -200.0]
-    r_v = [rand()*pi*1.0, rand()*pi*1.0, rand()*pi*1.0]
-    c = [SVector{2, Int32}(x[1], x[2]) for x in connections]
-    walls = (
-        SVector{4, Int32}(3,5,8,6),
-        SVector{4, Int32}(5,2,7,8),
-        SVector{4, Int32}(2,4,1,7),
-        SVector{4, Int32}(4,3,6,1),
-        SVector{4, Int32}(8,7,1,6),
-        SVector{4, Int32}(2,5,3,4),
-        )
-
-    cube = CubeJulia(v, p_v, r_v, c,walls)
-    output = zeros(UInt32, 512, 512)
-
-    return (cube, output)
 end
 
 function render_rasterize!(output::Array{UInt32, 2}, cube::CubeJulia)
@@ -93,11 +54,8 @@ function render_rasterize!(output::Array{UInt32, 2}, cube::CubeJulia)
 
     #line drawing
     @inbounds for c in cube.connections
-        from = vertices[:, c[1] + 1]
-        to = vertices[:, c[2] + 1]
-
-        x1 = from[1];   y1 = from[2];
-        x2 = to[1];     y2 = to[2]
+        x1 = vertices[1, c[1]];   y1 = vertices[2, c[1]];
+        x2 = vertices[1, c[2]];   y2 = vertices[2, c[2]];
 
         dx = x2 - x1
         dy = y2 - y1
@@ -120,12 +78,12 @@ function render_rasterize!(output::Array{UInt32, 2}, cube::CubeJulia)
 end # function
 
 
-function rasterize!(output::Array{UInt32, 2}, cube::CubeJulia, vertices::MMatrix{4, 8, Float32})
-    cube_number = 0
-    colors = [0xFFe6194B 0xFFf58231 0xFFffe119 0xFFbfef45 0xff3cb44b 0xff42d4f4]
+@inline function rasterize!(output::Array{UInt32, 2}, cube::CubeJulia, vertices::MMatrix{4, 8, Float32})
+    # cube_number = 0
+    # colors = [0xFFe6194B 0xFFf58231 0xFFffe119 0xFFbfef45 0xff3cb44b 0xff42d4f4]
 
     @inbounds for c in cube.walls
-        cube_number += 1
+        # cube_number += 1
         p1 = 0.0f0
         p2 = 0.0f0
 
@@ -157,7 +115,7 @@ function rasterize!(output::Array{UInt32, 2}, cube::CubeJulia, vertices::MMatrix
                 e &= edge_fun(p1, p2, tv14, tv24, tv11, tv21)
 
                 if e
-                    output[i, j] = colors[cube_number]
+                    output[i, j] = 0xFFe6194B
                 end
             end
         end

@@ -5,21 +5,24 @@ using Revise, Cube
 
 
 Cube.run_julia_rasterize()
-Cube.run_assembly_rasterize()
+Cube.run_assembly_rasterize_avx()
+Cube.run_assembly_rasterize_avx2()
 
-Cube.run_julia_rasterize_benchmark()
-Cube.run_assembly_rasterize_benchmark()
+Cube.benchmark_julia_rasterize()
+Cube.benchmark_assembly_rasterize_avx()
+Cube.benchmark_assembly_rasterize_avx2()
 
 using Colors, ImageView
-reinterpret(ARGB32, Cube.run_assembly_rasterize())
 reinterpret(ARGB32, Cube.run_julia_rasterize())
+reinterpret(ARGB32, Cube.run_assembly_rasterize_avx())
+reinterpret(ARGB32, Cube.run_assembly_rasterize_avx2())
 
 
 Cube.run_julia()
 Cube.run_assembly()
 
-Cube.run_julia_benchmark()
-Cube.run_assembly_benchmark()
+Cube.benchmark_julia()
+Cube.benchmark_assembly()
 
 using Plots
 heatmap(Cube.run_assembly())
