@@ -53,3 +53,22 @@ struct Cube_julia_rasterize
     connections::SVector{12, Connection_julia_rasterize}
     walls::SVector{6, SVector{4, Int32}}
 end
+
+struct Point_assembly_rasterize
+    position_vector::NTuple{4, Float32}
+end
+
+
+struct Connection_assembly_rasterize
+    from::Int32
+    to::Int32
+end
+
+
+struct Cube_assembly_rasterize
+    vertices::NTuple{8, Point_assembly_rasterize}
+    position_vector::NTuple{3, Float32}
+    rotation_vector::NTuple{3, Float32}
+    connections::NTuple{12, Connection_assembly_rasterize}
+    walls::NTuple{6, NTuple{4, Int32}}
+end
