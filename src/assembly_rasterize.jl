@@ -12,10 +12,10 @@ function prepare_args_assembly_rasterize()
 
     connections = [(0, 3), (0, 5), (0, 6), (1, 3), (1, 4), (1, 6), (2, 3), (2, 4), (2, 5), (4, 7), (5, 7), (6, 7)]
 
-    v = ([Point_assembly_rasterize((vertice...,)) for vertice in vertices]...,)
+    v = ([(vertice...,) for vertice in vertices]...,)
     p_v = ([rand()*10.0, rand()*10.0, -200.0]...,)
     r_v = ([rand()*pi*1.0, rand()*pi*1.0, rand()*pi*1.0]...,)
-    c = ([Connection_assembly_rasterize(x[1], x[2]) for x in connections]...,)
+    c = ([(x[1], x[2]) for x in connections]...,)
     walls = (
     (2, 4, 7, 5),
     (4, 1, 6, 7),
@@ -25,7 +25,7 @@ function prepare_args_assembly_rasterize()
     (1, 4, 2, 3)
 
         )
-    cube = Cube_assembly_rasterize(v, p_v, r_v, c,walls)
+    cube = CubeAssembly(v, p_v, r_v, c,walls)
     output = zeros(UInt32, 512, 512)
 
     return (cube, output)
@@ -33,7 +33,7 @@ end
 
 function run_assembly_rasterize()
     cube, output = prepare_args_assembly_rasterize()
-    ccall_assembly_rasterize(cube, output)
+    ccall_assembly_rasterize_avx(cube, output)
 end
 
 function run_assembly_rasterize_benchmark()
@@ -41,12 +41,12 @@ function run_assembly_rasterize_benchmark()
 
 end
 
-function ccall_assembly_rasterize_avx(cube::Cube_assembly_rasterize, output::Array{UInt32, 2})
-    ccall((:render, "src/assembly_rasterize_files/render_avx.lib"), Cvoid, (Ref{Cube_assembly_rasterize}, Ref{UInt32}), cube, output)
+function ccall_assembly_rasterize_avx(cube::CubeAssembly, output::Array{UInt32, 2})
+    ccall((:render, "src/assembly_rasterize_files/render_avx.lib"), Cvoid, (Ref{CubeAssembly}, Ref{UInt32}), cube, output)
     output
 end
 
-function ccall_assembly_rasterize_avx2(cube::Cube_assembly_rasterize, output::Array{UInt32, 2})
-    ccall((:render, "src/assembly_rasterize_files/render_avx2.lib"), Cvoid, (Ref{Cube_assembly_rasterize}, Ref{UInt32}), cube, output)
+function ccall_assembly_rasterize_avx2(cube::CubeAssembly, output::Array{UInt32, 2})
+    ccall((:render, "src/assembly_rasterize_files/render_avx2.lib"), Cvoid, (Ref{CubeAssembly}, Ref{UInt32}), cube, output)
     output
 end

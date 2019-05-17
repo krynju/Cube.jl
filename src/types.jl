@@ -1,74 +1,16 @@
-struct Point_assembly
-    position_vector::NTuple{4, Float32}
-end
-
-
-struct Connection_assembly
-    from::Int32
-    to::Int32
-end
-
-
-struct Cube_assembly
-    vertices::NTuple{8, Point_assembly}
+struct CubeAssembly
+    vertices::NTuple{8, NTuple{4, Float32}}
     position_vector::NTuple{3, Float32}
     rotation_vector::NTuple{3, Float32}
-    connections::NTuple{12, Connection_assembly}
-end
-
-
-struct Point_julia
-    position_vector::SVector{4, Float32}
-end
-
-
-struct Connection_julia
-    from::Int32
-    to::Int32
-end
-
-
-struct Cube_julia
-    vertices::SVector{8, Point_julia}
-    position_vector::SVector{3, Float32}
-    rotation_vector::SVector{3, Float32}
-    connections::SVector{12, Connection_julia}
-end
-
-struct Point_julia_rasterize
-    position_vector::SVector{4, Float32}
-end
-
-
-struct Connection_julia_rasterize
-    from::Int32
-    to::Int32
-end
-
-
-struct Cube_julia_rasterize
-    vertices::SVector{8, Point_julia_rasterize}
-    position_vector::SVector{3, Float32}
-    rotation_vector::SVector{3, Float32}
-    connections::SVector{12, Connection_julia_rasterize}
-    walls::SVector{6, SVector{4, Int32}}
-end
-
-struct Point_assembly_rasterize
-    position_vector::NTuple{4, Float32}
-end
-
-
-struct Connection_assembly_rasterize
-    from::Int32
-    to::Int32
-end
-
-
-struct Cube_assembly_rasterize
-    vertices::NTuple{8, Point_assembly_rasterize}
-    position_vector::NTuple{3, Float32}
-    rotation_vector::NTuple{3, Float32}
-    connections::NTuple{12, Connection_assembly_rasterize}
+    connections::NTuple{12, NTuple{2, Int32}}
     walls::NTuple{6, NTuple{4, Int32}}
+
+end
+
+struct CubeJulia
+    vertices::SVector{8, SVector{4, Float32}}
+    position_vector::SVector{3, Float32}
+    rotation_vector::SVector{3, Float32}
+    connections::SVector{12, SVector{2, Int32}}
+    walls::SVector{6, SVector{4, Int32}}
 end

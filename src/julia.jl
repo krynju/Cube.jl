@@ -24,19 +24,27 @@ function prepare_args_julia()
 
     connections = [(0, 3), (0, 5), (0, 6), (1, 3), (1, 4), (1, 6), (2, 3), (2, 4), (2, 5), (4, 7), (5, 7), (6, 7)]
 
-    v = [Point_julia(vertice) for vertice in vertices]
+    v = [SVector{4, Float32}(vertice) for vertice in vertices]
     p_v = [rand()*10.0, rand()*10.0, -200.0]
     r_v = [rand()*pi*1.0, rand()*pi*1.0, rand()*pi*1.0]
-    c = [Connection_julia(x[1], x[2]) for x in connections]
+    c = [SVector{2, Int32}(x[1], x[2]) for x in connections]
+    walls = (
+        SVector{4, Int32}(3,5,8,6),
+        SVector{4, Int32}(5,2,7,8),
+        SVector{4, Int32}(2,4,1,7),
+        SVector{4, Int32}(4,3,6,1),
+        SVector{4, Int32}(8,7,1,6),
+        SVector{4, Int32}(2,5,3,4),
+        )
 
-    cube = Cube_julia(v, p_v, r_v, c)
+    cube = CubeJulia(v, p_v, r_v, c,walls)
     output = zeros(UInt8, 512*3, 512)
 
     return (cube, output)
 end
 
 
-function render!(output::Array{UInt8, 2}, cube::Cube_julia)
+function render!(output::Array{UInt8, 2}, cube::CubeJulia)
     # construct rotation matrix
 
     Rz = @MMatrix zeros(Float32, 4, 4)
@@ -72,7 +80,7 @@ function render!(output::Array{UInt8, 2}, cube::Cube_julia)
     vertices = @MMatrix zeros(Float32, 4, 8)
 
     @inbounds for i = 1:8
-        vertices[:,i] .= R * cube.vertices[i].position_vector
+        vertices[:,i] .= R * cube.vertices[i]
     end
 
     distance = -100
@@ -84,8 +92,8 @@ function render!(output::Array{UInt8, 2}, cube::Cube_julia)
 
     #line drawing
     @inbounds for c in cube.connections
-        from = vertices[:, c.from + 1]
-        to = vertices[:, c.to + 1]
+        from = vertices[:, c[1] + 1]
+        to = vertices[:, c[2] + 1]
 
         x1 = from[1];   y1 = from[2];
         x2 = to[1];     y2 = to[2]
