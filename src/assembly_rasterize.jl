@@ -11,11 +11,11 @@ function run_assembly_rasterize_avx2()
 end
 
 function ccall_assembly_rasterize_avx(cube::CubeAssembly, output::Array{UInt32, 2})
-    ccall((:render, "src/assembly_rasterize_files/render_avx.lib"), Cvoid, (Ref{CubeAssembly}, Ref{UInt32}), cube, output)
+    ccall((:render, "src/assembly_files/render_avx.lib"), Cvoid, (Ref{CubeAssembly}, Ref{UInt32}), cube, output)
     output
 end
 
 function ccall_assembly_rasterize_avx2(cube::CubeAssembly, output::Array{UInt32, 2})
-    ccall((:render, "src/assembly_rasterize_files/render_avx2.lib"), Cvoid, (Ref{CubeAssembly}, Ref{UInt32}), cube, output)
+    ccall((:render, "src/assembly_files/render_avx2.lib"), Cvoid, (Ref{CubeAssembly}, Ref{UInt32}), cube, output)
     output
 end
