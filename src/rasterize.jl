@@ -53,37 +53,38 @@ function render_rasterize!(output::Array{UInt32, 2}, cube::CubeJulia)
     rasterize!(output, cube, vertices)
 
     #line drawing
-    @inbounds for c in cube.connections
-        x1 = vertices[1, c[1]];   y1 = vertices[2, c[1]];
-        x2 = vertices[1, c[2]];   y2 = vertices[2, c[2]];
-
-        dx = x2 - x1
-        dy = y2 - y1
-
-        step = abs(dx) >= abs(dy) ? abs(dx) : abs(dy)
-
-        dx = dx / step
-        dy = dy / step
-
-        x = x1; y = y1; i = 1.0
-
-        while i <= step
-            xcord = trunc(Int32, x)
-            ycord = trunc(Int32, y)
-            output[xcord, ycord] = 0xFFFFFFFF
-            x += dx;    y += dy;    i += 1.0
-        end
-    end
+    # @inbounds for c in cube.connections
+    #     x1 = vertices[1, c[1]];   y1 = vertices[2, c[1]];
+    #     x2 = vertices[1, c[2]];   y2 = vertices[2, c[2]];
+    #
+    #     dx = x2 - x1
+    #     dy = y2 - y1
+    #
+    #     step = abs(dx) >= abs(dy) ? abs(dx) : abs(dy)
+    #
+    #     dx = dx / step
+    #     dy = dy / step
+    #
+    #     x = x1; y = y1; i = 1.0
+    #
+    #     while i <= step
+    #         xcord = trunc(Int32, x)
+    #         ycord = trunc(Int32, y)
+    #         output[xcord, ycord] = 0xFFFFFFFF
+    #         x += dx;    y += dy;    i += 1.0
+    #     end
+    # end
     output
 end # function
 
 
 @inline function rasterize!(output::Array{UInt32, 2}, cube::CubeJulia, vertices::MMatrix{4, 8, Float32})
-    # cube_number = 0
-    # colors = [0xFFe6194B 0xFFf58231 0xFFffe119 0xFFbfef45 0xff3cb44b 0xff42d4f4]
+    colors = SVector{6, UInt32}(0xFFe6194B, 0xFFf58231, 0xFFffe119, 0xFFbfef45, 0xff3cb44b, 0xff42d4f4)
+
+    cube_number = 0
 
     @inbounds for c in cube.walls
-        # cube_number += 1
+        cube_number += 1
         p1 = 0.0f0
         p2 = 0.0f0
 
@@ -115,7 +116,7 @@ end # function
                 e &= edge_fun(p1, p2, tv14, tv24, tv11, tv21)
 
                 if e
-                    output[i, j] = 0xFFe6194B
+                    output[i, j] = colors[cube_number]
                 end
             end
         end
