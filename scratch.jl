@@ -1,6 +1,6 @@
-import Pkg.activate
-activate(".")
-
+using Pkg
+Pkg.activate(".")
+Pkg.instantiate()
 using Revise, Cube
 
 
