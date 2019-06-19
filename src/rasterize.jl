@@ -74,7 +74,7 @@ function render_rasterize!(output::Array{UInt32, 2}, cube::CubeJulia)
     #         x += dx;    y += dy;    i += 1.0
     #     end
     # end
-    output, cube, vertices
+    output
 end # function
 
 
@@ -83,10 +83,10 @@ end # function
 
     cube_number = 0
 
-    @inbounds for c in cube.walls
+    @inbounds @simd for c in cube.walls
         cube_number += 1
-        p1 = 0.0f0
-        p2 = 0.0f0
+        # p1 = 0.0f0
+        # p2 = 0.0f0
 
         tv11 = vertices[1, c[1]]
         tv21 = vertices[2, c[1]]
@@ -97,33 +97,22 @@ end # function
         tv14 = vertices[1, c[4]]
         tv24 = vertices[2, c[4]]
 
-
-        @inbounds for i in 1:size(output)[1]
-            # p1 += 1.0f0
-            # p2 = 0.0f0
-            p1 = convert(Float32, i)
-
-            @inbounds for j in 1:size(output)[2]
-                # p2 += 1.0f0
-
-                e = true
-
-                p2 = convert(Float32, j)
-
-                e = edge_fun(p1, p2, tv11, tv21, tv12, tv22)
-                    .& edge_fun(p1, p2, tv12, tv22, tv13, tv23)
-                    .& edge_fun(p1, p2, tv13, tv23, tv14, tv24)
-                    .& edge_fun(p1, p2, tv14, tv24, tv11, tv21)
-
-                if e
-                    output[j, i] = colors[cube_number]
-                end
+        for col = 1:size(output)[1]
+            p2 = convert(Float32, col)
+            @simd for row = 1:size(output)[2]
+                p1 = convert(Float32, row)
+                if(edge_fun(p1, p2, tv11, tv21, tv12, tv22)
+                        && edge_fun(p1, p2, tv12, tv22, tv13, tv23)
+                        && edge_fun(p1, p2, tv13, tv23, tv14, tv24)
+                        && edge_fun(p1, p2, tv14, tv24, tv11, tv21))
+                    output[row, col] = colors[cube_number]
+                end # if
             end
         end
     end # for
 
 end
 
-@inline function edge_fun(p1::Float32, p2::Float32, u1::Float32, u2::Float32, v1::Float32, v2::Float32)
+function edge_fun(p1::Float32, p2::Float32, u1::Float32, u2::Float32, v1::Float32, v2::Float32)
     return (p1-u1)*(v2-u2)-(p2-u2)*(v1-u1) <= 0
 end
