@@ -74,7 +74,7 @@ function render_rasterize!(output::Array{UInt32, 2}, cube::CubeJulia)
     #         x += dx;    y += dy;    i += 1.0
     #     end
     # end
-    output
+    output, cube, vertices
 end # function
 
 
@@ -110,13 +110,13 @@ end # function
 
                 p2 = convert(Float32, j)
 
-                e &= edge_fun(p1, p2, tv11, tv21, tv12, tv22)
-                e &= edge_fun(p1, p2, tv12, tv22, tv13, tv23)
-                e &= edge_fun(p1, p2, tv13, tv23, tv14, tv24)
-                e &= edge_fun(p1, p2, tv14, tv24, tv11, tv21)
+                e = edge_fun(p1, p2, tv11, tv21, tv12, tv22)
+                    .& edge_fun(p1, p2, tv12, tv22, tv13, tv23)
+                    .& edge_fun(p1, p2, tv13, tv23, tv14, tv24)
+                    .& edge_fun(p1, p2, tv14, tv24, tv11, tv21)
 
                 if e
-                    output[i, j] = colors[cube_number]
+                    output[j, i] = colors[cube_number]
                 end
             end
         end
