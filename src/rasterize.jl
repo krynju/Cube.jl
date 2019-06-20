@@ -83,10 +83,8 @@ end # function
 
     cube_number = 0
 
-    @inbounds @simd for c in cube.walls
-        cube_number += 1
-        # p1 = 0.0f0
-        # p2 = 0.0f0
+    @inbounds for c in cube.walls
+        cube_number = cube_number + 1
 
         tv11 = vertices[1, c[1]]
         tv21 = vertices[2, c[1]]
@@ -97,10 +95,12 @@ end # function
         tv14 = vertices[1, c[4]]
         tv24 = vertices[2, c[4]]
 
-        for col = 1:size(output)[1]
-            p2 = convert(Float32, col)
-            @simd for row = 1:size(output)[2]
+        @inbounds for col = 1:size(output)[1]
+
+            @inbounds @simd for row = 1:size(output)[2]
                 p1 = convert(Float32, row)
+                p2 = convert(Float32, col)
+
                 if(edge_fun(p1, p2, tv11, tv21, tv12, tv22)
                         && edge_fun(p1, p2, tv12, tv22, tv13, tv23)
                         && edge_fun(p1, p2, tv13, tv23, tv14, tv24)
